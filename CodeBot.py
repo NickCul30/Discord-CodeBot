@@ -2,8 +2,6 @@ import discord
 import asyncio
 import os
 from subprocess import PIPE, Popen
-#import time
-#from subprocess import call
 
 client = discord.Client()
 
@@ -20,50 +18,57 @@ async def on_message(message):
         if len(mes) == 5:
             tmpCode = mes[1]
             tmpInp = mes[3]
-            print(tmpCode)
-            print(tmpInp)
+            print(tmpCode)      # 4 testing
+            print(tmpInp)       # 4 testing
 
-            # Fix issue with class and filenames
+            #####################################
+            # Java
+            #####################################
             if tmpCode.startswith("java\n"):
                 code = tmpCode.split("java\n",1)[1]
-                print(code)
+                print(code)     # for testing
 
+                # Writes the code to Solution.java
                 with open('Solution.java', 'w+') as f:
                     f.write(code)
 
+                # Writes the input to the file javaInput.txt
                 inp = tmpInp.split("\n",1)[1]
                 with open('javaInput.txt', 'w+') as f:
                     f.write(inp)
+                
+                # Compiles the  program, and puts stderr into the string compileErr
+                p1 = Popen("javac Solution.java", shell=True, universal_newlines=True, stdout=PIPE, stderr=PIPE)
+                dummy, compileErr = p1.communicate()
 
-                p1 = Popen("javac Solution.java", shell=True, stdout=PIPE, stderr=PIPE)
-                stdout1, stderr1 = p1.communicate()
+                # Runs the program, puts stdout into string stdout, and stderr into runErr
+                p2 = Popen("java Solution", shell=True, universal_newlines=True, stdout=PIPE, stderr=PIPE)
+                stdout, runErr = p2.communicate()
 
-                p2 = Popen("java Solution", shell=True, stdout=PIPE, stderr=PIPE)
-                stdout2, stderr2 = p2.communicate()
-
+                # Removes the files that were definately created
                 os.remove('Solution.java')
                 os.remove('javaInput.txt')
 
-                if stderr1:
-                    #stderr1 = stderr1.replace("\r\n","\n")
-                    print(stderr1)
-                    await client.send_message(message.channel, stderr1)
-                    os.remove('javaInput.txt')
-                    os.remove('Solution.java')
-                    
-                elif stderr2:
-                    print("Err2")
-                    await client.send_message(message.channel, stderr2)
-                    os.remove('Solution.class')
-                    
-                elif stdout2:
-                    print("good")
-                    await client.send_message(message.channel, stdout2)
-                    os.remove('Solution.class')
-                else:
-                    await client.send_message(message.channel, "Program produced no output")
+                # Compile-time error occured
+                if compileErr:
+                    compileErr = "```\n" + compileErr + "\n```"
+                    await client.send_message(message.channel, compileErr)
+
+                # Run-time error occured
+                elif runErr:
+                    runErr = "```\n" + runErr + "\n```"
+                    await client.send_message(message.channel, runErr)
                     os.remove('Solution.class')
 
+                # Program ran successfully
+                else:
+                    stdout = "Output:\n```\n" + stdout + "\n```"
+                    await client.send_message(message.channel, stdout)
+                    os.remove('Solution.class')
+
+            #####################################
+            # C
+            #####################################
             if tmpCode.startswith("c\n"):
                 code = tmpCode.split("c\n",1)[1]
 
