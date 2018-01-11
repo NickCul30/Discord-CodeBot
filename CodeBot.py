@@ -1,6 +1,7 @@
 import discord
 import asyncio
 import os
+from subprocess import PIPE, Popen
 #import time
 #from subprocess import call
 
@@ -34,10 +35,34 @@ async def on_message(message):
                 with open('javaInput.txt', 'w+') as f:
                     f.write(inp)
 
-                exce = os.popen("javac Solution.java").read()
-                output = os.popen("java Solution < javaInput.txt").read()
+                p1 = Popen("javac Solution.java", shell=True, stdout=PIPE, stderr=PIPE)
+                stdout1, stderr1 = p1.communicate()
 
-                await client.send_message(message.channel, exce + output)
+                p2 = Popen("java Solution", shell=True, stdout=PIPE, stderr=PIPE)
+                stdout2, stderr2 = p2.communicate()
+
+                os.remove('Solution.java')
+                os.remove('javaInput.txt')
+
+                if stderr1:
+                    #stderr1 = stderr1.replace("\r\n","\n")
+                    print(stderr1)
+                    await client.send_message(message.channel, stderr1)
+                    os.remove('javaInput.txt')
+                    os.remove('Solution.java')
+                    
+                elif stderr2:
+                    print("Err2")
+                    await client.send_message(message.channel, stderr2)
+                    os.remove('Solution.class')
+                    
+                elif stdout2:
+                    print("good")
+                    await client.send_message(message.channel, stdout2)
+                    os.remove('Solution.class')
+                else:
+                    await client.send_message(message.channel, "Program produced no output")
+                    os.remove('Solution.class')
 
             if tmpCode.startswith("c\n"):
                 code = tmpCode.split("c\n",1)[1]
