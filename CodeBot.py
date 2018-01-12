@@ -12,6 +12,7 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
+    path = os.getcwd()
     if message.content.startswith("```"):
         mes = message.content.split("```")
         
@@ -25,6 +26,10 @@ async def on_message(message):
             # Java
             #####################################
             if tmpCode.startswith("java\n"):
+                
+                os.mkdir(path + "\\tmp") # Create a temp file to hold any ran program 
+                os.chdir(path + "\\tmp") # TODO: Add isolation property.
+                
                 code = tmpCode.split("java\n",1)[1]
                 print(code)     # for testing
 
@@ -66,10 +71,17 @@ async def on_message(message):
                     await client.send_message(message.channel, stdout)
                     os.remove('Solution.class')
 
+                os.chdir(path)
+                shutil.rmtree(path + "\\tmp") # Remove file tree created in tmp
+                
             #####################################
             # C
             #####################################
             if tmpCode.startswith("c\n"):
+
+                os.mkdir(path + "\\tmp") # Create a temp file to hold any ran program 
+                os.chdir(path + "\\tmp") # TODO: Add isolation property.
+                
                 code = tmpCode.split("c\n",1)[1]
 
                 with open('tmp.c', 'w+') as f:
@@ -81,13 +93,14 @@ async def on_message(message):
                 
 
                 exce = os.popen("gcc tmp.c -o Ctmp").read()
-                # Make a different isolated folder for this
-                output = os.popen("C:\\Users\\Nick\\Desktop\\CodeBot\\Ctmp.exe < cInput.txt").read()
+                output = os.popen(path + "tmp\\Ctmp.exe < cInput.txt").read()
                     
                 
 
                 await client.send_message(message.channel, output)
 
+                os.chdir(path)
+                shutil.rmtree(path + "\\tmp") # Remove file tree created in tmp
         
         
         
