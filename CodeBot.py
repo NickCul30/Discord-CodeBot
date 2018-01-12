@@ -2,6 +2,7 @@ import discord
 import asyncio
 import os
 from subprocess import PIPE, Popen
+import shutil
 
 client = discord.Client()
 
@@ -71,8 +72,9 @@ async def on_message(message):
                     await client.send_message(message.channel, stdout)
                     os.remove('Solution.class')
 
+                # Remove file tree created in tmp
                 os.chdir(path)
-                shutil.rmtree(path + "\\tmp") # Remove file tree created in tmp
+                shutil.rmtree(path + "\\tmp")
                 
             #####################################
             # C
