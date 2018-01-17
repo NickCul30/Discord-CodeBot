@@ -3,25 +3,27 @@ import asyncio
 import os
 from subprocess import PIPE, Popen
 import shutil
+import sys
 
 client = discord.Client()
 
 @client.event
 async def on_ready():
-    print("Bot online")
-    print(client.user.name)
+    sys.stdout.write("Bot online")
+    sys.stdout.write(client.user.name)
 
 @client.event
 async def on_message(message):
-    path = os.getcwd()
     if message.content.startswith("```"):
         mes = message.content.split("```")
         
         if len(mes) == 5:
+            path = os.path.dirname(os.path.realpath(__file__))
+            
             tmpCode = mes[1]
             tmpInp = mes[3]
-            print(tmpCode)      # 4 testing
-            print(tmpInp)       # 4 testing
+            sys.stdout.write(tmpCode)      # 4 testing
+            sys.stdout.write(tmpInp)       # 4 testing
 
             #####################################
             # Java
@@ -32,7 +34,7 @@ async def on_message(message):
                 os.chdir(path + "\\tmp") # TODO: Add isolation property.
                 
                 code = tmpCode.split("java\n",1)[1]
-                print(code)     # for testing
+                sys.stdout.write(code)     # for testing
 
                 # Writes the code to Solution.java
                 with open('Solution.java', 'w+') as f:
@@ -48,7 +50,7 @@ async def on_message(message):
                 dummy, compileErr = p1.communicate()
 
                 # Runs the program, puts stdout into string stdout, and stderr into runErr
-                p2 = Popen("java Solution", shell=True, universal_newlines=True, stdout=PIPE, stderr=PIPE)
+                p2 = Popen("java Solution < javaInput.txt", shell=True, universal_newlines=True, stdout=PIPE, stderr=PIPE)
                 stdout, runErr = p2.communicate()
 
                 # Removes the files that were definately created
@@ -57,12 +59,12 @@ async def on_message(message):
 
                 # Compile-time error occured
                 if compileErr:
-                    compileErr = "```\n" + compileErr + "\n```"
+                    compileErr = "Compile-time error occured:\n```\n" + compileErr + "\n```"
                     await client.send_message(message.channel, compileErr)
 
                 # Run-time error occured
                 elif runErr:
-                    runErr = "```\n" + runErr + "\n```"
+                    runErr = "Run-time error occured:\n```\n" + runErr + "\n```"
                     await client.send_message(message.channel, runErr)
                     os.remove('Solution.class')
 
@@ -85,24 +87,49 @@ async def on_message(message):
                 os.chdir(path + "\\tmp") # TODO: Add isolation property.
                 
                 code = tmpCode.split("c\n",1)[1]
+                sys.stdout.write(code)     # for testing
 
-                with open('tmp.c', 'w+') as f:
+                # Writes the code to Solution.c
+                with open('Solution.c', 'w+') as f:
                     f.write(code)
 
+                # Writes the input to the file cInput.txt
                 inp = tmpInp.split("\n",1)[1]
                 with open('cInput.txt', 'w+') as f:
                     f.write(inp)
                 
+                # Compiles the  program, and puts stderr into the string compileErr
+                p1 = Popen("gcc Solution.c", shell=True, universal_newlines=True, stdout=PIPE, stderr=PIPE)
+                dummy, compileErr = p1.communicate()
 
-                exce = os.popen("gcc tmp.c -o Ctmp").read()
-                output = os.popen(path + "tmp\\Ctmp.exe < cInput.txt").read()
-                    
-                
+                # Runs the program, puts stdout into string stdout, and stderr into runErr
+                p2 = Popen("a.exe < cInput.txt", shell=True, universal_newlines=True, stdout=PIPE, stderr=PIPE)
+                stdout, runErr = p2.communicate()
 
-                await client.send_message(message.channel, output)
+                # Removes the files that were definately created
+                os.remove('Solution.c')
+                os.remove('cInput.txt')
 
+                # Compile-time error occured
+                if compileErr:
+                    compileErr = "Compile-time error occured:\n```\n" + compileErr + "\n```"
+                    await client.send_message(message.channel, compileErr)
+
+                # Run-time error occured
+                elif runErr:
+                    runErr = "Run-time error occured:\n```\n" + runErr + "\n```"
+                    await client.send_message(message.channel, runErr)
+                    os.remove('a.exe')
+
+                # Program ran successfully
+                else:
+                    stdout = "Output:\n```\n" + stdout + "\n```"
+                    await client.send_message(message.channel, stdout)
+                    os.remove('a.exe')
+
+                # Remove file tree created in tmp
                 os.chdir(path)
-                shutil.rmtree(path + "\\tmp") # Remove file tree created in tmp
+                shutil.rmtree(path + "\\tmp")
         
         
         
