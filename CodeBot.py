@@ -134,4 +134,4 @@ async def on_message(message):
         
         
 
-client.run('MzkzOTk1MjI3Mjk3MzQ5NjMy.DR-o8g.gZGzYtSlnS6TatK-wMZHhuzkJzw')
+client.run('Super Secret Code')
